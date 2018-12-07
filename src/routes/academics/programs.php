@@ -6,11 +6,7 @@ use Slim\Http\Response;
 require_once __DIR__ . '/../../util.php';
 require_once __DIR__ . '/../../business/Logic.php';
 
-// this is the endpoint for students to register themseleves for taking admission into
-// various programs of the college.
-
-//attributes required for successful registration
-//name, mobile, session, program, semester
+// this is the endpoint for anyone to get information on programs.
 
 $app->post("/api/academics/get-all-programs", function (Request $request, Response $response, array $args) {
 
