@@ -3,6 +3,7 @@
 use Slim\Http\Request;
 use Slim\Http\Response;
 
+require_once __DIR__ . '/../../util.php';
 require_once __DIR__ . '/../../business/Logic.php';
 
 // this is the endpoint for students to register themseleves for taking admission into
@@ -13,23 +14,41 @@ require_once __DIR__ . '/../../business/Logic.php';
 
 $app->post("/api/academics/get-all-programs", function (Request $request, Response $response, array $args) {
 
+    $this->logger->info("/api/academics/get-all-programs");
+
+    //security check
+
+    //retrieve parameters from request body
     $requestBody = json_decode($request->getBody(), true);
-    $this->logger->info("POST /api/academics/get-all-programs");
+
+    $filter = $requestBody["filter"];
+    $limit = $requestBody["limit"];
+    $offset = $requestBody["offset"];
+
+    $errors = null;
+
+    if (!limitOk($errors, $limit) || !offsetOk($errors, $offset)) {
+        $outputJson = [
+            "ok" => false,
+            "data" => $errors,
+        ];
+        return $response->withJson($outputJson);
+    }
 
     $logic = new Logic();
-    $outputJson = $logic->getAllPrograms(null, $requestBody);
+    $programs = $logic->getAllPrograms($errors, $filter, $limit, $offset);
 
-    return $response->withJson($outputJson);
-
-});
-
-$app->post("/api/academics/get-programs-with-code", function (Request $request, Response $response, array $args) {
-
-    $requestBody = json_decode($request->getBody(), true);
-    $this->logger->info("POST /api/academics/get-programs-with-code");
-
-    $logic = new Logic();
-    $outputJson = $logic->getProgramsWhereCodeLike(null, $requestBody);
+    if (isset($errors)) {
+        $outputJson = [
+            "ok" => false,
+            "errors" => $errors,
+        ];
+    } else {
+        $outputJson = [
+            "ok" => true,
+            "data" => $programs,
+        ];
+    }
 
     return $response->withJson($outputJson);
 

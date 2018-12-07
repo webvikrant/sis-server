@@ -54,32 +54,15 @@ class Sql
     //================================================================================================================
 
     //select all
-    public function selectFromProgram($conn)
-    {
-        $sql = "SELECT id, code, name
-        FROM program";
-
-        $stmt = $conn->prepare($sql);
-        $stmt->execute();
-
-        $programs = array();
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $program = $this->loadProgramFromRow($row);
-            $programs[] = $program;
-        }
-        return $programs;
-    }
-
-    public function selectFromProgramWhereCodeLike($conn, $code)
+    public function selectFromProgramWhereCodeOrNameLike($conn, $filter, $limit, $offset)
     {
         $sql = "SELECT id, code, name
         FROM program
-        WHERE code like ?";
+        WHERE code like ? or name like ? limit " . $limit . " offset " . $offset;
 
         $stmt = $conn->prepare($sql);
 
-        $code = "%" . $code . "%";
-        $params = [$code];
+        $params = [$filter, $filter];
         $stmt->execute($params);
 
         $programs = array();
@@ -90,35 +73,21 @@ class Sql
         return $programs;
     }
 
-    // public function selectFromSlotWhereIdEquals($conn, $id)
-    // {
-    //     $sql = "SELECT slt.id as slt_id, slt.code as slt_code, slt.begins_at as slt_begins_at, slt.ends_at as slt_ends_at
-    //     FROM slot slt
-    //     WHERE slt.id = ?;";
-
-    //     $stmt = $conn->prepare($sql);
-    //     $params = [$id];
-    //     $stmt->execute($params);
-
-    //     $slot = null;
-    //     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-    //         $slot = $this->loadSlotFromRow($row);
-    //     }
-    //     return $slot;
-    // }
-
     //================================================================================================================
     //semester
     //================================================================================================================
 
     //select all
-    public function selectFromSemester($conn)
+    public function selectFromSemesterWhereCodeOrNameLike($conn, $filter, $limit, $offset)
     {
         $sql = "SELECT id, code, name
-        FROM semester";
+        FROM semester
+        WHERE code like ? or name like ? limit " . $limit . " offset " . $offset;
 
         $stmt = $conn->prepare($sql);
-        $stmt->execute();
+
+        $params = [$filter, $filter];
+        $stmt->execute($params);
 
         $semesters = array();
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
@@ -127,5 +96,4 @@ class Sql
         }
         return $semesters;
     }
-
 }

@@ -1,5 +1,5 @@
 <?php
-require_once '../Database.php';
+require_once '../src/Database.php';
 require_once 'Sql.php';
 
 class Logic
@@ -19,71 +19,28 @@ class Logic
     //================================================================================================================
 
     //get all programs
-    public function getAllPrograms($user, $requestBody)
+    public function getAllPrograms(&$errors, $filter, $limit, $offset)
     {
-        $outputJson = null;
-
-        //no need to verify user, any body can call this function
-
         $programs = null;
+
+        if (!limitOk($errors, $limit) || !offsetOk($errors, $offset)) {
+            return;
+        }
+
+        if (!isset($filter)) {
+            $filter = "";
+        }
+
+        $filter = "%" . $filter . "%";
+
         try {
             $conn = $this->db->connect();
-            $programs = $this->sql->selectFromProgram($conn);
-            $outputJson = [
-                "ok" => true,
-                "data" => $programs,
-            ];
+            $programs = $this->sql->selectFromProgramWhereCodeOrNameLike($conn, $filter, $limit, $offset);
         } catch (Exception $e) {
-            $outputJson = [
-                "ok" => false,
-                "error" => "Exception",
-                "description" => $e,
-            ];
-        }
-        return $outputJson;
-    }
-
-    public function getProgramsWhereCodeLike($user, $requestBody)
-    {
-        $outputJson = null;
-
-        //no need to verify user, any body can call this function
-
-        if(!isset($requestBody)){
-            $outputJson = [
-                "ok" => false,
-                "error" => "Missing body",
-                "description" => "Request body is empty.",
-            ];
-            return $outputJson;
+            $errors[] = $e->errorInfo[2];
         }
 
-        $code = $requestBody["code"];
-        if(!isset($code)){
-            $outputJson = [
-                "ok" => false,
-                "error" => "Missing attribute",
-                "description" => "Attribute 'code' is missing in request body.",
-            ];
-            return $outputJson;
-        }
-
-        $programs = null;
-        try {
-            $conn = $this->db->connect();
-            $programs = $this->sql->selectFromProgramWhereCodeLike($conn, $code);
-            $outputJson = [
-                "ok" => true,
-                "data" => $programs,
-            ];
-        } catch (Exception $e) {
-            $outputJson = [
-                "ok" => false,
-                "error" => "Exception",
-                "description" => $e,
-            ];
-        }
-        return $outputJson;
+        return $programs;
     }
 
     //================================================================================================================
@@ -91,28 +48,28 @@ class Logic
     //================================================================================================================
 
     //get all semesters
-    public function getAllSemesters($user, $requestBody)
+    public function getAllSemesters(&$errors, $filter, $limit, $offset)
     {
-        $outputJson = null;
-
-        //no need to verify user, any body can call this function
-
         $semesters = null;
+
+        if (!limitOk($errors, $limit) || !offsetOk($errors, $offset)) {
+            return;
+        }
+
+        if (!isset($filter)) {
+            $filter = "";
+        }
+
+        $filter = "%" . $filter . "%";
+
         try {
             $conn = $this->db->connect();
-            $semesters = $this->sql->selectFromSemester($conn);
-            $outputJson = [
-                "ok" => true,
-                "data" => $semesters,
-            ];
+            $semesters = $this->sql->selectFromSemesterWhereCodeOrNameLike($conn, $filter, $limit, $offset);
         } catch (Exception $e) {
-            $outputJson = [
-                "ok" => false,
-                "error" => "Exception",
-                "description" => $e,
-            ];
+            $errors[] = $e->errorInfo[2];
         }
-        return $outputJson;
+
+        return $semesters;
     }
 
 }
