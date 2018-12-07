@@ -14,7 +14,7 @@ require_once __DIR__ . '/../../business/Logic.php';
 
 $app->post("/api/admissions/enquiry", function (Request $request, Response $response, array $args) {
 
-    $this->logger->info("/api/admissions/register");
+    $this->logger->info("/api/admissions/enquiry");
 
     //security check
 
@@ -40,8 +40,8 @@ $app->post("/api/admissions/enquiry", function (Request $request, Response $resp
         $outputJson = [
             "ok" => true,
             "data" => [
-                "enquiryId"=>$enquiryId,
-                "message"k
+                "enquiryId" => $enquiryId,
+                "message" => "Enquiry recorded successfully.",
             ],
         ];
     }
