@@ -81,10 +81,20 @@ class Logic
     {
         $enquiryId = 0;
 
+        //checks
+        //mobile is valid
+        //mobile does not already exist
+        //programCode is valid
+        //semesterCode is valid
+        if (!mobileOk($mobile)) {
+            $errors[] = "Invalid mobile number.";
+            return;
+        }
 
         try {
             $conn = $this->db->connect();
-            $semesters = $this->sql->selectFromSemesterWhereCodeOrNameLike($conn, $filter, $limit, $offset);
+
+            // $semesters = $this->sql->selectFromSemesterWhereCodeOrNameLike($conn, $filter, $limit, $offset);
         } catch (Exception $e) {
             $errors[] = $e->errorInfo[2];
         }

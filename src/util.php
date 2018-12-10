@@ -24,3 +24,9 @@ function offsetOk(&$errors, $offset)
 
     return true;
 }
+
+// 10 digit mobile check
+function mobileOk($mobile)
+{
+    return preg_match('/^[0-9]{10}+$/', $mobile);
+}

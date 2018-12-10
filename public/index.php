@@ -10,7 +10,7 @@ if (PHP_SAPI == 'cli-server') {
 }
 
 require __DIR__ . '/../vendor/autoload.php';
-require_once '../config.php';
+require_once __DIR__. '/../config.php';
 
 // session_start();
 
@@ -24,6 +24,10 @@ require __DIR__ . '/../src/dependencies.php';
 // Register middleware
 require __DIR__ . '/../src/middleware.php';
 
+//
+require_once __DIR__ . '/../src/util.php';
+require_once __DIR__.'/../src/business/Logic.php';
+
 // Register routes
 
 //academics
@@ -31,8 +35,7 @@ require __DIR__ . '/../src/routes/academics/programs.php';
 require __DIR__ . '/../src/routes/academics/semesters.php';
 
 //admissions
-require __DIR__ . '/../src/routes/admissions/register.php';
-
+require __DIR__ . '/../src/routes/admissions/enquiry.php';
 
 // Run app
 $app->run();

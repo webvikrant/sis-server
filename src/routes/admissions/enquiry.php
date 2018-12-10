@@ -3,8 +3,6 @@
 use Slim\Http\Request;
 use Slim\Http\Response;
 
-require_once __DIR__ . '/../../util.php';
-require_once __DIR__ . '/../../business/Logic.php';
 
 // this is the endpoint for students to register themseleves for taking admission into
 // various programs of the college for the designated academic session.
