@@ -5,9 +5,9 @@ use Slim\Http\Response;
 
 // this is the endpoint for anyone to get information on semesters.
 
-$app->post("/api/academics/get-all-semesters", function (Request $request, Response $response, array $args) {
+$app->post("/api/academics/get-semesters", function (Request $request, Response $response, array $args) {
 
-    $this->logger->info("/api/academics/get-all-semesters");
+    $this->logger->info("/api/academics/get-semesters");
 
     //security check
 

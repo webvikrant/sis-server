@@ -5,9 +5,9 @@ use Slim\Http\Response;
 
 // this is the endpoint for anyone to get information on programs.
 
-$app->post("/api/academics/get-all-programs", function (Request $request, Response $response, array $args) {
+$app->post("/api/academics/get-programs", function (Request $request, Response $response, array $args) {
 
-    $this->logger->info("/api/academics/get-all-programs");
+    $this->logger->info("/api/academics/get-programs");
 
     //security check
 

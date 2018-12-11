@@ -79,27 +79,67 @@ class Logic
     //create new enquiry
     public function createEnquiry(&$errors, $name, $mobile, $programCode, $semesterCode)
     {
-        $enquiryId = 0;
+        $newEnquiryId = 0;
 
         //checks
         //mobile is valid
-        //mobile does not already exist
+        //mobile already exists
         //programCode is valid
         //semesterCode is valid
         if (!mobileOk($mobile)) {
-            $errors[] = "Invalid mobile number.";
+            $errors[] = "Mobile number missing or invalid.";
+            return;
+        }
+
+        if (!isset($name)) {
+            $errors[] = "Name missing.";
+            return;
+        }
+
+        if (!isset($programCode)) {
+            $errors[] = "Program code missing.";
+            return;
+        }
+
+        if (!isset($semesterCode)) {
+            $errors[] = "Semester code missing.";
             return;
         }
 
         try {
             $conn = $this->db->connect();
+            $existingEnquiryCount = $this->sql->selectCountFromEnquiryWhereMobileEquals($conn, $mobile);
+            if (isset($existingEnquiryCount) && $existingEnquiryCount == 1) {
+                $errors[] = "Mobile number already exists.";
+                return;
+            }
 
-            // $semesters = $this->sql->selectFromSemesterWhereCodeOrNameLike($conn, $filter, $limit, $offset);
+            $program = $this->sql->selectFromProgramWhereCodeEquals($conn, $programCode);
+            if(!isset($program)){
+                $errors[] = "Incorrect program code.";
+                return;
+            }
+
+            $semester = $this->sql->selectFromSemesterWhereCodeEquals($conn, $semesterCode);
+            if(!isset($semester)){
+                $errors[] = "Incorrect semester code.";
+                return;
+            }
+
+            $sessionId = 10;//hardcoded - session for which registrations are now open
+
+            // $conn->beginTransaction();
+            $submittedOn = time();
+            $enquiryId = $this->sql->selectMaxIdFromTable($conn, 'enquiry');
+            $enquiryId++;
+            $this->sql->insertIntoEnquiry($conn, $enquiryId, $sessionId, $program->getId(), $semester->getId(), $name, $mobile, $submittedOn);
+            $newEnquiryId = $enquiryId;
+            // $conn->commit();
         } catch (Exception $e) {
             $errors[] = $e->errorInfo[2];
         }
 
-        return $semesters;
+        return $newEnquiryId;
     }
 
 }

@@ -53,7 +53,7 @@ class Sql
     //program
     //================================================================================================================
 
-    //select all
+    //select
     public function selectFromProgramWhereCodeOrNameLike($conn, $filter, $limit, $offset)
     {
         $sql = "SELECT id, code, name
@@ -73,11 +73,29 @@ class Sql
         return $programs;
     }
 
+    public function selectFromProgramWhereCodeEquals($conn, $code)
+    {
+        $sql = "SELECT id, code, name
+        FROM program
+        WHERE code = ?";
+
+        $stmt = $conn->prepare($sql);
+
+        $params = [$code];
+        $stmt->execute($params);
+
+        $program = null;
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $program = $this->loadProgramFromRow($row);
+        }
+        return $program;
+    }
+
     //================================================================================================================
     //semester
     //================================================================================================================
 
-    //select all
+    //select
     public function selectFromSemesterWhereCodeOrNameLike($conn, $filter, $limit, $offset)
     {
         $sql = "SELECT id, code, name
@@ -95,5 +113,59 @@ class Sql
             $semesters[] = $semester;
         }
         return $semesters;
+    }
+
+
+    public function selectFromSemesterWhereCodeEquals($conn, $code)
+    {
+        $sql = "SELECT id, code, name
+        FROM semester
+        WHERE code = ?";
+
+        $stmt = $conn->prepare($sql);
+
+        $params = [$code];
+        $stmt->execute($params);
+
+        $semester = null;
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $semester = $this->loadSemesterFromRow($row);
+        }
+        return $semester;
+    }
+
+    //================================================================================================================
+    //enquiry
+    //================================================================================================================
+
+    //insert
+    public function insertIntoEnquiry($conn, $id, $sessionId, $programId, $semesterId, $name, $mobile, $submittedOn)
+    {
+        //convert numeric dates to string dates
+        $sql = "INSERT INTO enquiry (id, session_id, program_id, semester_id,  name, mobile, submitted_on)
+        VALUES (?,?,?,?,?,?,?);";
+
+        $stmt = $conn->prepare($sql);
+        $params = [$id, $sessionId, $programId, $semesterId, $name, $mobile, $submittedOn];
+        $stmt->execute($params);
+    }
+
+    //select one
+    public function selectCountFromEnquiryWhereMobileEquals($conn, $mobile)
+    {
+        $sql = "SELECT id
+        FROM enquiry
+        WHERE mobile = ?";
+
+        $stmt = $conn->prepare($sql);
+
+        $params = [$mobile];
+        $stmt->execute($params);
+
+        $count = 0;
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $count++;
+        }
+        return $count;
     }
 }
