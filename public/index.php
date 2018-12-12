@@ -30,12 +30,15 @@ require_once __DIR__.'/../src/business/Logic.php';
 
 // Register routes
 
+//auth
+require __DIR__ . '/../src/routes/auth/admission-candidate.php';
+
 //academics
 require __DIR__ . '/../src/routes/academics/programs.php';
 require __DIR__ . '/../src/routes/academics/semesters.php';
 
 //admissions
-require __DIR__ . '/../src/routes/admissions/enquiry.php';
+require __DIR__ . '/../src/routes/admissions/enquiries.php';
 
 // Run app
 $app->run();

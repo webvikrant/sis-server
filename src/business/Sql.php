@@ -1,6 +1,9 @@
 <?php
 require_once 'entities/Program.php';
 require_once 'entities/Semester.php';
+require_once 'entities/Enquiry.php';
+require_once 'entities/Session.php';
+
 class Sql
 {
     public function __construct()
@@ -8,21 +11,117 @@ class Sql
     }
 
     //================================================================================================================
+    //unique column aliases for each table
+    //================================================================================================================
+    private function getColumns($table)
+    {
+        $columns = null;
+
+        switch ($table) {
+            case "session":
+                $columns = ["id", "name"];
+                break;
+
+            case "program":
+                $columns = ["id", "code", "name"];
+                break;
+
+            case "semester":
+                $columns = ["id", "code", "name"];
+                break;
+
+            case "enquiry":
+                $columns = ["id", "session_id", "program_id", "semester_id", "name", "mobile", "submitted_on"];
+                break;
+
+            default:
+                $columns = [];
+                break;
+        }
+
+        $aliases = $this->generateAliases($table, $columns);
+        return $aliases;
+    }
+
+    private function generateAliases($table, $columns)
+    {
+        $aliases = "";
+        $count = 0;
+        foreach ($columns as $column) {
+            $count++;
+            $alias = " " . $table . "." . $column . " as " . $this->generateAlias($table, $column) . " ";
+            if ($count == 1) {
+                $aliases = $alias;
+            } else {
+                $aliases = $aliases . "," . $alias;
+            }
+        }
+        return $aliases;
+    }
+
+    private function generateAlias($table, $column)
+    {
+        return $table . _ . $column;
+    }
+    //================================================================================================================
     //create object from row
     //================================================================================================================
+
+    //session
+    private function loadSessionFromRow($row)
+    {
+        $table = "session";
+        $session = new Session(
+            $row[$this->generateAlias($table, "id")],
+            $row[$this->generateAlias($table, "name")]);
+
+        return $session;
+    }
 
     //program
     private function loadProgramFromRow($row)
     {
-        $program = new Program($row['id'], $row['code'], $row['name']);
+        $table = "program";
+        $program = new Program(
+            $row[$this->generateAlias($table, "id")],
+            $row[$this->generateAlias($table, "code")],
+            $row[$this->generateAlias($table, "name")]);
+
         return $program;
     }
 
     //semester
     private function loadSemesterFromRow($row)
     {
-        $semester = new Semester($row['id'], $row['code'], $row['name']);
+        $table = "semester";
+        $semester = new Semester(
+            $row[$this->generateAlias($table, "id")],
+            $row[$this->generateAlias($table, "code")],
+            $row[$this->generateAlias($table, "name")]);
+
         return $semester;
+    }
+
+    //enquiry
+    private function loadEnquiryFromRow($row)
+    {
+        $session = $this->loadSessionFromRow($row);
+        $program = $this->loadProgramFromRow($row);
+        $semester = $this->loadSemesterFromRow($row);
+
+        $table = "enquiry";
+
+        $enquiry = new Enquiry(
+            $row[$this->generateAlias($table, "id")],
+            $session,
+            $program,
+            $semester,
+            $row[$this->generateAlias($table, "name")],
+            $row[$this->generateAlias($table, "mobile")],
+            $row[$this->generateAlias($table, "submitted_on")]
+        );
+
+        return $enquiry;
     }
 
     //================================================================================================================
@@ -50,15 +149,42 @@ class Sql
     }
 
     //================================================================================================================
+    //session
+    //================================================================================================================
+
+    //select one
+    public function selectFromSessionWhereIdEquals($conn, $id)
+    {
+        $columnList = $this->getColumns("session");
+
+        $sql = "SELECT $columnList
+        FROM session
+        WHERE id = ?";
+
+        $stmt = $conn->prepare($sql);
+
+        $params = [$id];
+        $stmt->execute($params);
+
+        $session = null;
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $session = $this->loadSessionFromRow($row);
+        }
+        return $session;
+    }
+
+    //================================================================================================================
     //program
     //================================================================================================================
 
     //select
     public function selectFromProgramWhereCodeOrNameLike($conn, $filter, $limit, $offset)
     {
-        $sql = "SELECT id, code, name
+        $columnList = $this->getColumns("program");
+
+        $sql = "SELECT $columnList
         FROM program
-        WHERE code like ? or name like ? limit " . $limit . " offset " . $offset;
+        WHERE program.code like ? or program.name like ? limit " . $limit . " offset " . $offset;
 
         $stmt = $conn->prepare($sql);
 
@@ -75,9 +201,11 @@ class Sql
 
     public function selectFromProgramWhereCodeEquals($conn, $code)
     {
-        $sql = "SELECT id, code, name
+        $columnList = $this->getColumns("program");
+
+        $sql = "SELECT $columnList
         FROM program
-        WHERE code = ?";
+        WHERE program.code = ?";
 
         $stmt = $conn->prepare($sql);
 
@@ -98,9 +226,11 @@ class Sql
     //select
     public function selectFromSemesterWhereCodeOrNameLike($conn, $filter, $limit, $offset)
     {
-        $sql = "SELECT id, code, name
+        $columnList = $this->getColumns("semester");
+
+        $sql = "SELECT $columnList
         FROM semester
-        WHERE code like ? or name like ? limit " . $limit . " offset " . $offset;
+        WHERE semester.code like ? or name like ? limit " . $limit . " offset " . $offset;
 
         $stmt = $conn->prepare($sql);
 
@@ -115,12 +245,13 @@ class Sql
         return $semesters;
     }
 
-
     public function selectFromSemesterWhereCodeEquals($conn, $code)
     {
-        $sql = "SELECT id, code, name
+        $columnList = $this->getColumns("semester");
+
+        $sql = "SELECT $columnList
         FROM semester
-        WHERE code = ?";
+        WHERE semester.code = ?";
 
         $stmt = $conn->prepare($sql);
 
@@ -167,5 +298,70 @@ class Sql
             $count++;
         }
         return $count;
+    }
+
+    //select one
+    public function selectFromEnquiryWhereIdMobileEquals($conn, $id, $mobile)
+    {
+        $sessionColumnList = $this->getColumns("session");
+        $programColumnList = $this->getColumns("program");
+        $semesterColumnList = $this->getColumns("semester");
+        $enquiryColumnList = $this->getColumns("enquiry");
+
+        $sql = "SELECT $sessionColumnList, $programColumnList, $semesterColumnList, $enquiryColumnList
+        FROM enquiry
+        LEFT JOIN session on enquiry.session_id = session.id
+        LEFT JOIN program on enquiry.program_id = program.id
+        LEFT JOIN semester on enquiry.semester_id = semester.id
+        WHERE enquiry.id = ? and enquiry.mobile = ?";
+
+        $stmt = $conn->prepare($sql);
+
+        $params = [$id, $mobile];
+        $stmt->execute($params);
+
+        $enquiry = null;
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $enquiry = $this->loadEnquiryFromRow($row);
+        }
+        return $enquiry;
+    }
+
+    //select one
+    public function selectFromEnquiryWhereIdEquals($conn, $id)
+    {
+        $sessionColumnList = $this->getColumns("session");
+        $programColumnList = $this->getColumns("program");
+        $semesterColumnList = $this->getColumns("semester");
+        $enquiryColumnList = $this->getColumns("enquiry");
+
+        $sql = "SELECT $sessionColumnList, $programColumnList, $semesterColumnList, $enquiryColumnList
+        FROM enquiry
+        LEFT JOIN session on enquiry.session_id = session.id
+        LEFT JOIN program on enquiry.program_id = program.id
+        LEFT JOIN semester on enquiry.semester_id = semester.id
+        WHERE enquiry.id = ?";
+
+        $stmt = $conn->prepare($sql);
+
+        $params = [$id];
+        $stmt->execute($params);
+
+        $enquiry = null;
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $enquiry = $this->loadEnquiryFromRow($row);
+        }
+        return $enquiry;
+    }
+
+    //update
+    public function updateEnquirySetProgram($conn, $id, $programId)
+    {
+        //convert numeric dates to string dates
+        $sql = "update enquiry set program_id = ? where id = ?";
+
+        $stmt = $conn->prepare($sql);
+        $params = [$programId, $id];
+        $stmt->execute($params);
     }
 }
