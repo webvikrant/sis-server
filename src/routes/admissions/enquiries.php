@@ -3,7 +3,6 @@
 use Slim\Http\Request;
 use Slim\Http\Response;
 
-
 // this is the endpoint for students to register themseleves for taking admission into
 // various programs of the college for the designated academic session.
 
@@ -52,14 +51,12 @@ $app->post("/api/admissions/update-enquiry", function (Request $request, Respons
 
     $this->logger->info("/api/admissions/update-enquiry");
 
-    //security check
-
     //retrieve parameters from request body
     $requestBody = json_decode($request->getBody(), true);
 
     $jwt = $requestBody["jwt"];
     $programCode = $requestBody["programCode"];
-
+    
     $errors = null;
 
     $logic = new Logic();
@@ -74,8 +71,11 @@ $app->post("/api/admissions/update-enquiry", function (Request $request, Respons
         $outputJson = [
             "ok" => true,
             "data" => [
-                "enquiry" => $enquiry,
                 "message" => "Enquiry updated successfully.",
+                "enquiryId" => $enquiry->getId(),
+                "mobile" => $enquiry->getMobile(),
+                "programCode" => $enquiry->getProgram()->getCode(),
+                "semesterCode" => $enquiry->getSemester()->getCode()
             ],
         ];
     }

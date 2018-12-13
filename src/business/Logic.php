@@ -20,7 +20,7 @@ class Logic
     //================================================================================================================
 
     //admission candidate
-    public function authenticateEnquiry(&$errors, $enquiryId, $mobile)
+    public function authenticateAdmissionCandidate(&$errors, $enquiryId, $mobile)
     {
         $jwt = null;
 
@@ -61,6 +61,32 @@ class Logic
         return $jwt;
     }
 
+    private function validateJwtOfAdmissionCandidate(&$errors, $jwt){
+        $enquiry = null;
+
+        if (!isset($jwt)) {
+            $errors[] = "JWT missing";
+            return;
+        }
+        $conn = $this->db->connect();
+
+        $key = JWT_SECRET;
+        $decoded = JWT::decode($jwt, $key, array("HS256"));
+        if(!isset($decoded)){
+            $errors[] = "JWT could not be decoded.";
+            return;
+        }
+        $decoded_array = (array) $decoded;
+        $enquiryId = $decoded_array["enquiryId"];
+
+        $enquiry = $this->sql->selectFromEnquiryWhereIdEquals($conn, $enquiryId);
+        if(!isset($enquiry)){
+            $errors[] = "Enquiry does not exist.";
+            return;
+        }
+
+        return $enquiry;
+    }
     //================================================================================================================
     //program
     //================================================================================================================
@@ -192,12 +218,13 @@ class Logic
     //update enquiry
     public function updateEnquiry(&$errors, $jwt, $programCode)
     {
-        $enquiry = null;
+        $updatedEenquiry = null;
 
         //checks
         //security check
-        if (!isset($jwt)) {
-            $errors[] = "JWT missing";
+        $enquiry = $this->validateJwtOfAdmissionCandidate($errors, $jwt);
+        if(!isset($enquiry)){
+            $errors[] = "Auth error.";
             return;
         }
 
@@ -210,25 +237,22 @@ class Logic
         try {
             $conn = $this->db->connect();
 
-            $key = JWT_SECRET;
-            $decoded = JWT::decode($jwt, $key, array("HS256"));
-
             $program = $this->sql->selectFromProgramWhereCodeEquals($conn, $programCode);
             if (!isset($program)) {
-                $errors[] = "Incorrect program code.";
+                $errors[] = "Program does not exist.";
                 return;
             }
 
             // $conn->beginTransaction();
-            $submittedOn = time();
-            $this->sql->updateEnquirySetProgram($conn, $enquiryId, $program->getId());
-            $enquiry = $this->sql->selectFromEnquiryWhereIdEquals($conn, $enquiryId);
+            // $submittedOn = time();
+            $this->sql->updateEnquirySetProgram($conn, $enquiry->getId(), $program->getId());
+            $updatedEnquiry = $this->sql->selectFromEnquiryWhereIdEquals($conn, $enquiry->getId());
             // $conn->commit();
         } catch (Exception $e) {
             $errors[] = $e->errorInfo[2];
         }
 
-        return $enquiry;
+        return $updatedEnquiry;
     }
 
 }

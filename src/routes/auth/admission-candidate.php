@@ -24,7 +24,7 @@ $app->post("/api/auth/admission-candidate", function (Request $request, Response
     $errors = null;
 
     $logic = new Logic();
-    $jwt = $logic->authenticateEnquiry($errors, $enquiryId, $mobile);
+    $jwt = $logic->authenticateAdmissionCandidate($errors, $enquiryId, $mobile);
 
     if (isset($errors)) {
         $outputJson = [
